@@ -1,10 +1,16 @@
+@ IMPORTS
+@ =============================================================================================
 .extern printf
 .extern scanf
-
 .include "Rx_Tx.s"
 
+@ TEXT
+@ =============================================================================================
 .text
 .global main
+
+@ MAIN
+@ =============================================================================================
 main:
 	GPIOExport	pin24					@ config GPIO24
 	setSleepTime	#0, #100000000		@ 0.1 sec
@@ -20,6 +26,8 @@ main:
 	setSleepTime	#0, #100000000		@ 0.1 sec
 	doSleep								@ sleep
 
+@ LOOP
+@ =============================================================================================
 repeat:
 	ldr		R0, =give_com	@ load address string
 	bl		printf			@ call printf()
@@ -30,7 +38,6 @@ repeat:
 	ldr		R4, [R4]		@ load command
 
 	cmp		R4, #1			@ command cmp 1 ?
-	debug   R4				@ debug command 1
 	bne		elif1			@ next option
 	mov		R0, R4			@ parameter send_byte
 	bl		send_byte		@ call send_byte()
@@ -39,7 +46,6 @@ repeat:
 elif1:
 	cmp		R4, #2			@ command cmp 2 ?
 	bne		elif2			@ next option
-	debug   R4				@ debug command 2
 	mov		R0, R4			@ parameter send_byte
 	bl		send_byte		@ call send_byte()
 	b		get_answer		@ body done
@@ -47,7 +53,6 @@ elif1:
 elif2:
 	cmp		R4, #3			@ command cmp 3 ?
 	bne		elif3			@ next option
-    debug   R4				@ debug command 3
 	mov		R0, R4			@ parameter send_byte
 	bl		send_byte		@ call send_byte()
 	b		get_answer		@ body done
@@ -55,7 +60,6 @@ elif2:
 elif3:
 	cmp		R4, #4			@ command cmp 4 ?
 	bne		elif4			@ next option
-	debug   R4				@ debug command 4
 	mov		R0, R4			@ parameter send_byte
 	bl		send_byte		@ call send_byte()
 	b		exit			@ body done
@@ -71,18 +75,18 @@ exit:
 	mov		R7, #1			@ exit
 	svc		0				@ call Linux
 
+@ GET ANSWER
+@ =============================================================================================
 get_answer:
-
-	ldr		R0, =get_answer	@ load address string
+	ldr		R0, =get_answer_str	@ load address string
 	bl		printf			@ call printf()
 
 	mov R0, #0				@ set byte standard
 	bl receive_byte			@ call receive_byte()
-	debug R0				@ debug received byte
 	cmp R0, #1				@ compare with 1 (winner is player 1)
-	beq loser				@ branch if lost
+	beq winner				@ branch if lost
 	cmp R0, #2				@ compare with 2 (winner is player 2)
-	beq winner				@ branch if won
+	beq loser				@ branch if won
 	cmp R0, #3				@ compare with 3 (draw)
 	beq draw				@ branch if draw
 	cmp R0, #4				@ compare with 4 (error)
@@ -104,6 +108,8 @@ draw:
 	bl		printf			@ call printf()
 	b 		repeat			@ back to loop
 
+@ DATA
+@ =============================================================================================
 .data
 command: .space 4
 pin23:	.asciz	"23"
@@ -118,5 +124,5 @@ give_com: .asciz "Blad(1) Steen(2) Schaar(3) Exit(4) >>"
 loser_str: .asciz "You lost!\n"
 winner_str: .asciz "You won!\n"
 draw_str: .asciz "Draw!\n"
-get_answer: .asciz "Waiting for opponent's move...\n"
+get_answer_str: .asciz "Waiting for opponent's move...\n"
 str_buffer: .space 128
