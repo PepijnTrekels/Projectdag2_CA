@@ -97,7 +97,7 @@ loser:
 	ldr		R0, =loser_str	@ load address string
 	bl		printf			@ call printf()
 	b 		repeat			@ back to loop
-
+²&
 winner:
 	ldr		R0, =winner_str	@ load address string
 	bl		printf			@ call printf()
